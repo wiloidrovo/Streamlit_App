@@ -4,7 +4,7 @@ import plotly.express as px
 
 # Mostrar KPIs
 def mostrar_kpis(df, target_col=None):
-    st.subheader("🔹 Indicadores Clave (KPI)")
+    st.subheader("Indicadores Clave (KPI)")
 
     col1, col2, col3 = st.columns(3)
 
@@ -27,12 +27,52 @@ def mostrar_kpis(df, target_col=None):
     else:
         col3.info("No hay columnas numéricas")
 
+    # Si el target está definido, mostramos su distribución
+    if target_col and target_col in df.columns:
+        st.markdown(f"### Distribución de la variable objetivo: `{target_col}`")
+
+        if pd.api.types.is_numeric_dtype(df[target_col]):
+            fig = px.histogram(
+                df, x=target_col, nbins=20,
+                title=f"Distribución de {target_col}"
+            )
+        else:
+            dist = df[target_col].value_counts(normalize=True).reset_index()
+            dist.columns = [target_col, "Proportion"]
+            dist["Proportion"] = dist["Proportion"] * 100
+
+            fig = px.pie(
+                dist, names=target_col, values="Proportion",
+                title=f"Distribución de {target_col}",
+                hole=0.3
+            )
+            fig.update_traces(textinfo="label+percent")
+
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("No se ha definido una variable objetivo aún.")
+
 # Generar gráficos interactivos
 def generador_graficos(df):
     st.subheader("Generador de gráficos interactivos")
 
     # Seleccionar variable objetivo
-    target_col = st.selectbox("Selecciona variable objetivo (opcional):", [None] + list(df.columns))
+    if "target_col" not in st.session_state:
+        st.session_state.target_col = None
+
+    options = [None] + list(df.columns)
+    default_index = (
+        options.index(st.session_state.target_col)
+        if st.session_state.target_col in df.columns else 0
+    )
+
+    st.session_state.target_col = st.selectbox(
+        "Selecciona variable objetivo (opcional):",
+        options,
+        index=default_index
+    )
+
+    target_col = st.session_state.target_col
 
     # Selección de tipo de gráfico
     tipos = ["Histograma", "Gráfico de barras", "Boxplot", "Scatterplot", "Heatmap (correlación)"]
@@ -73,7 +113,7 @@ def generador_graficos(df):
 # Función principal de KPIs y gráficos
 def ejecutar_eda_2(df):
     # KPIs
-    mostrar_kpis(df)
+    mostrar_kpis(df, target_col=st.session_state.get("target_col", None))
 
     # Gráficos
     generador_graficos(df)
