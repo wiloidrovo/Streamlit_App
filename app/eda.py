@@ -156,5 +156,8 @@ def ejecutar_eda(df_original):
     from app.eda_2 import ejecutar_eda_2
     ejecutar_eda_2(df_revised)
 
+    from app.eda_target import ejecutar_eda_target
+    ejecutar_eda_target(df_revised)
+
     # Retornamos el dataframe modificado
     return df_revised
