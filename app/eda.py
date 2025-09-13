@@ -6,22 +6,22 @@ import pandas as pd
 def aplicar_imputaciones(df, imputaciones):
     df_copy = df.copy()
     for col, strat, val in imputaciones:
-        if strat == "Media":
+        if strat == "Mean":
             df_copy[col] = df_copy[col].fillna(df_copy[col].mean())
-        elif strat == "Mediana":
+        elif strat == "Median":
             df_copy[col] = df_copy[col].fillna(df_copy[col].median())
-        elif strat == "Constante":
+        elif strat == "Constant":
             df_copy[col] = df_copy[col].fillna(val)
-        elif strat == "Eliminar filas":
+        elif strat == "Delete rows":
             df_copy = df_copy.dropna(subset=[col])
-        elif strat == "Moda":
+        elif strat == "Mode":
             moda = df_copy[col].mode()[0]
             df_copy[col] = df_copy[col].fillna(moda)
     return df_copy
 
 # Función para imputar datos nulos
 def imputar_nulos(df):
-    st.subheader("Tratamiento de valores nulos")
+    st.subheader("Treatment of null values")
 
     # Inicializar log de imputaciones
     if "imputaciones" not in st.session_state:
@@ -32,14 +32,14 @@ def imputar_nulos(df):
     null_summary = null_summary[null_summary > 0]
 
     if null_summary.empty:
-        st.info("No hay valores nulos en el dataset actual.")
+        st.info("There are no null values in the current dataset.")
     else:
-        st.write("Columnas con valores nulos:")
+        st.write("Columns with null values:")
         st.dataframe(null_summary.rename("Missing Values"))
 
         # Seleccionar columna a imputar
         col_seleccionada = st.selectbox(
-            "Selecciona la columna que deseas imputar:",
+            "Select the column to be imputed:",
             options = null_summary.index
         )
 
@@ -49,8 +49,8 @@ def imputar_nulos(df):
         if col_seleccionada:
             if pd.api.types.is_numeric_dtype(df[col_seleccionada]):
                 estrategia = st.radio(
-                    f"Estrategia para imputar {col_seleccionada} (numérica):",
-                    ["Media", "Mediana", "Valor constante", "Eliminar filas"],
+                    f"Strategy for imputing {col_seleccionada} (numerical):",
+                    ["Mean", "Median", "Mode", "Constant Value", "Delete rows"],
                     horizontal=True
                 )
                 if estrategia == "Valor constante":
@@ -59,28 +59,28 @@ def imputar_nulos(df):
                     )
             else:
                 estrategia = st.radio(
-                    f"Estrategia para imputar {col_seleccionada} (categórica):",
-                    ["Moda", "Valor constante", "Eliminar filas"],
+                    f"Strategy for imputing {col_seleccionada} (categorical):",
+                    ["Mode", "Constant Value", "Delete rows"],
                     horizontal=True
                 )
-                if estrategia == "Valor constante":
+                if estrategia == "Constant Value":
                     constante = st.text_input(
-                        f"Ingrese el valor con el que desea imputar {col_seleccionada}:"
+                        f"Enter the value to be imputed {col_seleccionada}:"
                     )
 
         # Botón para aplicar imputación
-        if st.button("Aplicar imputación"):
+        if st.button("Apply imputation"):
             if estrategia and col_seleccionada:
                 # Si ya existe imputación previa para esta columna, la reemplaza
                 st.session_state.imputaciones = [
                     imp for imp in st.session_state.imputaciones if imp[0] != col_seleccionada
                 ]
                 st.session_state.imputaciones.append((col_seleccionada, estrategia, constante))
-                st.success(f"Imputación guardada: {col_seleccionada} -> {estrategia}")
+                st.success(f"Imputation saved: {col_seleccionada} -> {estrategia}")
 
     # Mostrar historial de imputaciones
     if st.session_state.imputaciones:
-        st.sidebar.info("Historial de imputaciones:")
+        st.sidebar.info("Imputations history:")
         for col, strat, val in st.session_state.imputaciones:
             detalle = f"{col} -> {strat}"
             if val not in [None, ""]:
@@ -89,7 +89,7 @@ def imputar_nulos(df):
 
 # Función que muestra un resumen general
 def mostrar_info(df):
-    st.subheader("General Information (Dataset Actualizado)")
+    st.subheader("General Information (Updated Dataset)")
     info_df = pd.DataFrame({
         'Column': df.columns,
         'Non-Null Count': df.notnull().sum().values,
@@ -116,7 +116,7 @@ def ejecutar_eda(df_original):
 
     # 4. Selección de columnas a eliminar
     cols_a_eliminar = st.sidebar.multiselect(
-        "Select the columns you want to delete:",
+        "Select columns to delete:",
         options=[col for col in df.columns if col not in st.session_state.eliminadas]
     )
 
@@ -141,12 +141,12 @@ def ejecutar_eda(df_original):
 
     # Mostrar siempre qué columnas están eliminadas
     if st.session_state.eliminadas:
-        st.sidebar.warning(f"Columnas eliminadas: {', '.join(st.session_state.eliminadas)}")
+        st.sidebar.warning(f"Deleted columns: {', '.join(st.session_state.eliminadas)}")
     else:
-        st.sidebar.info("No hay columnas eliminadas")
+        st.sidebar.info("There are no deleted columns")
 
     # Preview del dataset después de limpieza
-    st.subheader("Data Preview después de limpieza")
+    st.subheader("Data Preview after cleaning")
     st.write(df_revised.head(5))
     st.info(f"Dataset final shape: {df_revised.shape[0]} rows x {df_revised.shape[1]} columns")
 

@@ -53,7 +53,7 @@ def cargar_archivo():
 
             return df  # Devolvemos el dataframe cargado
         except Exception as e:
-            st.error(f"Error al leer el archivo: {e}")
+            st.error(f"Error reading the file: {e}")
     return None
 
 # Función para mostrar la información general del dataset
