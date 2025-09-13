@@ -3,16 +3,16 @@ import pandas as pd
 import plotly.express as px
 
 def analizar_vs_target(df, target_col):
-    st.subheader(f"Análisis automático respecto a la variable objetivo: `{target_col}`")
+    st.subheader(f"Automatic analysis with respect to the target variable: `{target_col}`")
 
     if target_col not in df.columns:
-        st.warning("La variable objetivo no está en el dataset.")
+        st.warning("The target variable is not in the dataset.")
         return
 
     # Verificar que target no tenga demasiadas clases
     n_clases = df[target_col].nunique()
     if n_clases > 20:
-        st.error(f"La variable objetivo tiene {n_clases} clases únicas, demasiadas para un análisis automático.")
+        st.error(f"The target variable has {n_clases} unique classes, too many for automatic analysis.")
         return
 
     for col in df.columns:
@@ -25,13 +25,13 @@ def analizar_vs_target(df, target_col):
             # Boxplot para numéricas
             fig = px.box(
                 df, x=target_col, y=col, color=target_col,
-                title=f"Distribución de {col} según {target_col}"
+                title=f"Distribution of {col} according to {target_col}"
             )
 
             # Añadir histograma adicional
             hist = px.histogram(
                 df, x=col, color=target_col, barmode="overlay",
-                title=f"Histograma de {col} según {target_col}"
+                title=f"Histogram of {col} according to {target_col}"
             )
 
             st.plotly_chart(fig, use_container_width=True)
@@ -43,11 +43,11 @@ def analizar_vs_target(df, target_col):
             if n_unicos == 2:
                 # Variable binaria -> barras con porcentajes
                 cross_tab = pd.crosstab(df[col], df[target_col], normalize="index") * 100
-                cross_tab = cross_tab.reset_index().melt(id_vars=col, var_name=target_col, value_name="Porcentaje")
+                cross_tab = cross_tab.reset_index().melt(id_vars=col, var_name=target_col, value_name="Percentage")
 
                 fig = px.bar(
-                    cross_tab, x=col, y="Porcentaje", color=target_col,
-                    text="Porcentaje", title=f"Distribución porcentual de {col} según {target_col}",
+                    cross_tab, x=col, y="Percentage", color=target_col,
+                    text="Percentage", title=f"Percentage distribution of {col} according to {target_col}",
                     barmode="group"
                 )
                 fig.update_traces(texttemplate="%{text:.1f}%", textposition="inside")
@@ -55,18 +55,18 @@ def analizar_vs_target(df, target_col):
             else:
                 # Variable categórica con más clases
                 cross_tab = pd.crosstab(df[col], df[target_col], normalize="index") * 100
-                cross_tab = cross_tab.reset_index().melt(id_vars=col, var_name=target_col, value_name="Porcentaje")
+                cross_tab = cross_tab.reset_index().melt(id_vars=col, var_name=target_col, value_name="Percentage")
 
                 fig = px.bar(
-                    cross_tab, x=col, y="Porcentaje", color=target_col,
-                    title=f"Distribución porcentual de {col} según {target_col}",
+                    cross_tab, x=col, y="Percentage", color=target_col,
+                    title=f"Percentage distribution of {col} according to {target_col}",
                     barmode="stack"
                 )
 
             st.plotly_chart(fig, use_container_width=True)
 
             # Mostrar tabla de conteos y porcentajes
-            st.write("Tabla de distribución:")
+            st.write("Distribution table:")
             tabla = pd.crosstab(df[col], df[target_col], margins=True, normalize="index") * 100
             st.dataframe(tabla.round(2))
 
@@ -75,7 +75,7 @@ def ejecutar_eda_target(df):
     target_col = st.session_state.get("target_col", None)
 
     if not target_col:
-        st.info("No se ha definido una variable objetivo aún.")
+        st.info("A target variable has not yet been defined.")
         return
 
     analizar_vs_target(df, target_col)

@@ -80,7 +80,7 @@ def imputar_nulos(df):
 
     # Mostrar historial de imputaciones
     if st.session_state.imputaciones:
-        st.sidebar.info("Imputations history:")
+        st.sidebar.info("Imputations History:")
         for col, strat, val in st.session_state.imputaciones:
             detalle = f"{col} -> {strat}"
             if val not in [None, ""]:
