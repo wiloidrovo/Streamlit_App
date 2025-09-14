@@ -1,4 +1,4 @@
-# Streamlit EDA & ML App
+# Streamlit EDA App
 
 Esta aplicación interactiva desarrollada en **Python + Streamlit** permite realizar **Análisis Exploratorio de Datos (EDA)** de manera intuitiva y flexible.  
 El objetivo es **cargar datos, limpiarlos, analizarlos y visualizar tendencias clave**, preparando el dataset para la construcción de modelos de Machine Learning.
@@ -51,17 +51,22 @@ El objetivo es **cargar datos, limpiarlos, analizarlos y visualizar tendencias c
 ## Estructura del proyecto
 
 Streamlit_App/
+
 │── app/
+
 │ ├── eda.py # Lógica principal del EDA (imputaciones, limpieza, columnas)
+
 │ ├── eda_2.py # KPIs y generador de gráficos
+
 │ ├── eda_target.py # Análisis automático con respecto a la variable objetivo
+
 │── main.py # Punto de entrada de la aplicación Streamlit
+
 │── requirements.txt # Dependencias necesarias
+
 │── README.md # Documentación del proyecto
 
 ## Ejecución
-
-### Clonar el repositorio
 
 ```bash
 git clone https://github.com/wiloidrovo/Streamlit_App.git

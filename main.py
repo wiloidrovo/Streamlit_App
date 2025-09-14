@@ -4,7 +4,7 @@ from app.eda import ejecutar_eda
 
 def main():
     # Título de la aplicación
-    st.title("Data Analysis - Telco Churn")
+    st.title("Data Analysis")
 
     # Sidebar para navegación entre pestañas
     st.sidebar.title("Navigation Menu")
