@@ -1,0 +1,6 @@
+streamlit
+pandas
+numpy
+plotly
+
+#pip install -r requirements.txt
