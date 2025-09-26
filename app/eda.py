@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-#from app.eda_2 import ejecutar_eda_2
 
 # Función para aplicar imputaciones sobre el dataset base
 def aplicar_imputaciones(df, imputaciones):
@@ -98,35 +97,6 @@ def mostrar_info(df):
     })
     st.dataframe(info_df)
 
-def mostrar_conclusiones():
-    st.markdown(
-        """
-        <div style="
-            border-radius: 12px;
-            padding: 20px 25px;
-            margin-top: 30px;
-            background-color: #1e1e1e;
-            border: 1px solid #444;
-        ">
-            <h3 style="color:#93ACF6; margin-bottom:15px;">Conclusions of the EDA</h3>
-            <ul style="color:#e0e0e0; font-size:16px; line-height:1.6;">
-                <li>After imputation, the dataset reaches a sufficient structural quality level, making it reliable for churn prediction modeling.</li>
-                <li>The distribution of the target variable <b>Churn</b> clearly shows the percentage of customers who cancel the service, providing a direct view of the problem and a solid basis for retention strategies.</li>
-                <li>The average <b>MonthlyCharges</b> suggests a correlation between service cost and retention: customers with higher charges tend to show higher churn rates.</li>
-                <li>The analysis of <b>tenure</b> and <b>contract type</b> shows that customers with monthly contracts present higher churn rates, while longer-term contracts foster greater loyalty. This supports the importance of promoting long-term plans.</li>
-                <li>Although they represent only 16% of the sample, <b>SeniorCitizen</b> customers may show different churn behavior compared to non-seniors, suggesting that age could be a relevant predictor.</li>
-                <li>Differences observed in <b>payment methods</b> and additional services (Internet, phone service, streaming) may influence customer retention, highlighting that billing preferences and service combinations are important churn factors.</li>
-            </ul>
-            <p style="margin-top:15px; color:#cccccc; font-size:15px;">
-                Overall, the analysis confirms that <b>churn is multifactorial</b>, influenced by contract conditions, service-related factors, and demographic characteristics. 
-                This provides a solid foundation for developing predictive models and effective loyalty programs.
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-    
-
 # Función principal de EDA
 def ejecutar_eda(df_original):
 
@@ -186,8 +156,6 @@ def ejecutar_eda(df_original):
 
     from app.eda_target import ejecutar_eda_target
     ejecutar_eda_target(df_revised)
-
-    mostrar_conclusiones()
 
     # Retornamos el dataframe modificado
     return df_revised

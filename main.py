@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 from app.carga_datos import cargar_archivo, mostrar_info, mostrar_estadisticas, mostrar_preview
 from app.eda import ejecutar_eda
 
@@ -56,15 +57,25 @@ def main():
     # Machine Learning Model
     elif seleccion == "ML Model":
         st.subheader("Machine Learning Model")
-
+        from app.ml_page import prediction_page
         if "df" in st.session_state:
             st.write("Dataset ready for Machine Learning Model:")
             st.write(st.session_state.df.head())
             st.info(f"Shape: {st.session_state.df.shape[0]} rows x {st.session_state.df.shape[1]} columns")
+
+            # Convertir el DataFrame a CSV en memoria
+            csv = st.session_state.df.to_csv(index=False).encode("utf-8")
+
+            # Botón para descargar el dataset final
+            st.download_button(
+                label="Download cleaned dataset (CSV)",
+                data=csv,
+                file_name="cleaned_dataset.csv",
+                mime="text/csv"
+            )
+            prediction_page(st.session_state.df)
         else:
             st.warning("First, perform the EDA to prepare the dataset.")
-
-        # Aquí se colocará el modelo ML cuando esté listo
         
 
 if __name__ == "__main__":
