@@ -1,7 +1,7 @@
 # Streamlit EDA App
 
-Esta aplicación interactiva desarrollada en **Python + Streamlit** permite realizar **Análisis Exploratorio de Datos (EDA)** de manera intuitiva y flexible.  
-El objetivo es **cargar datos, limpiarlos, analizarlos y visualizar tendencias clave**, preparando el dataset para la construcción de modelos de Machine Learning.
+Esta aplicación interactiva desarrollada en **Python + Streamlit** permite realizar **Análisis Exploratorio de Datos (EDA)** y **predicciones con un modelo de Machine Learning** de manera intuitiva y flexible.  
+El objetivo es **cargar datos, limpiarlos, analizarlos, visualizarlos y preparar un dataset final para la construcción y uso de modelos predictivos**.
 
 ---
 
@@ -40,11 +40,32 @@ El objetivo es **cargar datos, limpiarlos, analizarlos y visualizar tendencias c
 - Comparación de cada variable frente al target definido.
 - Boxplots para variables numéricas.
 - Gráficos de barras apiladas (% de distribución) para categóricas.
+- Histogramas segmentados.
+- Tablas de distribución.
 - Detección de desbalance de clases en el target.
 
-### **Conclusiones**
+---
 
-- Recuadro al final del análisis con **insights clave extraídos del dataset**, listos para documentar hallazgos o continuar con la fase de modelado.
+### **Modelo de Machine Learning**
+
+- Preprocesamiento con **Pipelines + ColumnTransformer**:
+  - Escalado robusto en variables numéricas.
+  - OneHotEncoding en categóricas.
+- Entrenamiento y evaluación de **Decision Tree Classifier**.
+- Exportación del pipeline + modelo en `models/decision_tree_pipeline.pkl`.
+
+---
+
+### **Predicción en Streamlit**
+
+- Carga del modelo entrenado desde `models/`.
+- Formulario dinámico con campos adaptados:
+  - `number_input` para variables numéricas.
+  - `selectbox` para categóricas.
+- El input del usuario pasa automáticamente por el pipeline.
+- Se muestra:
+  - **Clase predicha (Cancelado / No Cancelado)**.
+  - **Probabilidad de cancelación (%)**.
 
 ---
 
@@ -53,12 +74,23 @@ El objetivo es **cargar datos, limpiarlos, analizarlos y visualizar tendencias c
 ```bash
 Streamlit_App/
 │
-├── app/                          # Módulos de la aplicación
+├── app/                          # Módulos principales
+│   ├── carga_datos.py            # Carga y previsualización de datasets
 │   ├── eda.py                    # Lógica principal del EDA (imputaciones, limpieza, columnas)
 │   ├── eda_2.py                  # KPIs y generador de gráficos
-│   ├── eda_target.py             # Análisis automático respecto a la variable objetivo
+│   ├── eda_target.py             # Análisis automático del target
+│   ├── ml_page.py                # Página del modelo ML con formulario de predicción
+│   ├── pipelines_transf.py       # Pipelines y transformadores personalizados
+│   └── utils.py                  # Funciones auxiliares
 │
-├── main.py                       # Punto de entrada de la aplicación Streamlit
+├── models/                       # Modelos exportados
+│   └── decision_tree_pipeline.pkl
+│
+├── booking_clean.csv             # Dataset limpio (ejemplo)
+├── hotel_booking.csv             # Dataset original (ejemplo)
+│
+├── pipelines.ipynb               # Notebook de entrenamiento y exportación del modelo
+├── main.py                       # Punto de entrada de la app Streamlit
 ├── requirements.txt              # Dependencias necesarias
 └── README.md                     # Documentación del proyecto
 ```

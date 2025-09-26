@@ -2,5 +2,8 @@ streamlit
 pandas
 numpy
 plotly
+scikit-learn
+joblib
+matplotlib
 
 #pip install -r requirements.txt
