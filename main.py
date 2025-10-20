@@ -9,7 +9,7 @@ def main():
 
     # Sidebar para navegación entre pestañas
     st.sidebar.title("Navigation Menu")
-    opciones = ["Data Loading", "EDA", "ML Model"]
+    opciones = ["Data Loading", "EDA", "ML Model", "Dashboard", "Business Impact"]
     seleccion = st.sidebar.radio("Select a tab:", opciones)
 
     # Cargar Datos
@@ -76,6 +76,19 @@ def main():
             prediction_page(st.session_state.df)
         else:
             st.warning("First, perform the EDA to prepare the dataset.")
+
+    # Dashboard
+    elif seleccion == "Dashboard":
+        from app.dashboard import dashboard_page
+        dashboard_page(st.session_state.get("df", None))
+
+    # Business Impact
+    elif seleccion == "Business Impact":
+        from app.business_impact import business_impact_page
+        if "df" in st.session_state:
+            business_impact_page(st.session_state.df)
+        else:
+            st.warning("Please prepare the dataset in EDA first.")
         
 
 if __name__ == "__main__":

@@ -12,13 +12,9 @@ def convertir_columnas_numericas(df):
     columnas_convertidas = []
     for col in df.select_dtypes(include=["object"]).columns:
         try:
-            # Guardamos una copia antes de convertir
             original = df[col].copy()
-
-            # Intentamos convertir
             df[col] = pd.to_numeric(df[col], errors="coerce")
 
-            # Revisamos si la conversión fue razonable
             nan_ratio = df[col].isna().mean()
             if nan_ratio > 0.4:  
                 # Si se pierden demasiados datos, revertimos
@@ -30,6 +26,20 @@ def convertir_columnas_numericas(df):
             pass
     return df, columnas_convertidas
 
+def convertir_binarias_a_categoricas(df):
+    """
+    Convierte automáticamente columnas numéricas con valores únicos {0, 1} a categóricas ("No"/"Yes").
+    Retorna el dataframe y la lista de columnas convertidas.
+    """
+    columnas_convertidas = []
+    for col in df.select_dtypes(include=["number"]).columns:
+        valores = df[col].dropna().unique()
+        # Detectamos columnas binarias puras (solo 0 y 1)
+        if set(valores).issubset({0, 1}) and len(valores) <= 2:
+            df[col] = df[col].map({0: "No", 1: "Yes"}).astype("object")
+            columnas_convertidas.append(col)
+    return df, columnas_convertidas
+
 # Función para cargar el archivo
 def cargar_archivo():
     archivo = st.file_uploader("Upload your CSV or Excel file", type=["csv", "xlsx", "xls"])
@@ -38,25 +48,27 @@ def cargar_archivo():
         # Mostrar nombre del archivo cargado
         st.write(f"**File uploaded successfully!** {archivo.name}")
         
-        # Intentamos leer el archivo
         try:
             if archivo.name.endswith('.csv'):
                 df = pd.read_csv(archivo)
             else:
                 df = pd.read_excel(archivo)
 
-            # Convertir automáticamente columnas numéricas mal tipadas
-            df,cols = convertir_columnas_numericas(df)
+            df,cols_num = convertir_columnas_numericas(df)
 
-            if cols:
-                st.sidebar.info(f"Columns converted to numeric: {', '.join(cols)}")
+            df, cols_bin = convertir_binarias_a_categoricas(df)
 
-            return df  # Devolvemos el dataframe cargado
+            if cols_num:
+                st.sidebar.info(f"Columns converted to numeric: {', '.join(cols_num)}")
+            if cols_bin:
+                st.sidebar.info(f"Binary columns converted to categorical: {', '.join(cols_bin)}")
+
+            return df
+
         except Exception as e:
             st.error(f"Error reading the file: {e}")
     return None
 
-# Función para mostrar la información general del dataset
 def mostrar_info(df):
     st.subheader('General Information')
     info_df = pd.DataFrame({

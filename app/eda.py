@@ -151,8 +151,12 @@ def ejecutar_eda(df_original):
     # Resumen general actualizado
     mostrar_info(df_revised)
 
+    st.markdown("---")
+
     from app.eda_2 import ejecutar_eda_2
     ejecutar_eda_2(df_revised)
+
+    st.markdown("---")
 
     from app.eda_target import ejecutar_eda_target
     ejecutar_eda_target(df_revised)
