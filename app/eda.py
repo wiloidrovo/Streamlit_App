@@ -1,89 +1,9 @@
 import streamlit as st
 import pandas as pd
+from app.utils import apply_style
 
 # =====================================================
-# 💅 ESTILO PERSONALIZADO (mismo tema que main.py)
-# =====================================================
-st.markdown("""
-    <style>
-        /* Contenedor principal */
-        .main {
-            background-color: #0e1117;
-            color: #fafafa;
-            font-family: "Inter", sans-serif;
-        }
-        h1, h2, h3, h4 {
-            color: #00bcd4;
-            font-weight: 700 !important;
-        }
-        p, label, .stMarkdown {
-            color: #e0e0e0;
-        }
-
-        /* Subheaders con acento */
-        div.block-container h2 {
-            border-left: 5px solid #00bcd4;
-            padding-left: 10px;
-            margin-top: 1.5em;
-        }
-
-        /* Tarjetas elegantes */
-        .stCard {
-            background: #111827;
-            padding: 1.2em 1.5em;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,.3);
-            margin-bottom: 1.5em;
-        }
-
-        /* Sidebar */
-        section[data-testid="stSidebar"] {
-            background: linear-gradient(180deg, #1a1a2e, #16213e);
-        }
-
-        /* Botones */
-        div.stButton > button {
-            background: linear-gradient(90deg, #00bcd4, #2196f3);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 0.5em 1.1em;
-            font-weight: 600;
-            transition: all 0.2s ease-in-out;
-        }
-        div.stButton > button:hover {
-            background: linear-gradient(90deg, #26c6da, #42a5f5);
-            transform: scale(1.03);
-        }
-
-        /* Tablas y dataframes */
-        div[data-testid="stDataFrame"] {
-            border-radius: 8px;
-            border: 1px solid #1f2937;
-        }
-
-        /* Mensajes */
-        .stSuccess {
-            background-color: #063d33;
-            border-left: 6px solid #00e676;
-            color: #d4f3e3;
-        }
-        .stInfo {
-            background-color: #0b2239;
-            border-left: 6px solid #42a5f5;
-            color: #cfe8ff;
-        }
-        .stWarning {
-            background-color: #332b00;
-            border-left: 6px solid #ffeb3b;
-            color: #fff8b0;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-
-# =====================================================
-# ⚙️ FUNCIONES DE PROCESAMIENTO
+# FUNCIONES DE PROCESAMIENTO
 # =====================================================
 
 def aplicar_imputaciones(df, imputaciones):
@@ -106,7 +26,6 @@ def aplicar_imputaciones(df, imputaciones):
 def imputar_nulos(df):
     st.subheader("🧩 Treatment of Null Values")
 
-    # Inicializar log de imputaciones
     if "imputaciones" not in st.session_state:
         st.session_state.imputaciones = []
 
@@ -159,7 +78,6 @@ def imputar_nulos(df):
                 st.session_state.imputaciones.append((col_seleccionada, estrategia, constante))
                 st.success(f"✅ Imputation saved: `{col_seleccionada}` → {estrategia}")
 
-    # Mostrar historial de imputaciones
     if st.session_state.imputaciones:
         st.sidebar.markdown("### 🧮 Imputations History")
         for col, strat, val in st.session_state.imputaciones:
@@ -181,24 +99,23 @@ def mostrar_info(df):
 
 
 # =====================================================
-# 🎨 ESTRUCTURA PRINCIPAL DE EDA
+# ESTRUCTURA PRINCIPAL DE EDA
 # =====================================================
 
 def ejecutar_eda(df_original):
+    # ✅ Aplicar estilo global aquí (no al importar el módulo)
+    apply_style()
 
-    # 1️⃣ Imputación de valores nulos
+    # --- Tratamiento de nulos
     df = imputar_nulos(df_original)
-
-    # 2️⃣ Aplicar imputaciones
     df = aplicar_imputaciones(df_original, st.session_state.get("imputaciones", []))
 
-    # 3️⃣ Inicialización de columnas eliminadas
+    # --- Control de columnas eliminadas
     if "eliminadas" not in st.session_state:
         st.session_state.eliminadas = []
 
     st.sidebar.subheader("🧱 Column Management")
 
-    # 4️⃣ Eliminar columnas
     cols_a_eliminar = st.sidebar.multiselect(
         "Select columns to delete:",
         options=[col for col in df.columns if col not in st.session_state.eliminadas]
@@ -208,7 +125,6 @@ def ejecutar_eda(df_original):
         if col not in st.session_state.eliminadas:
             st.session_state.eliminadas.append(col)
 
-    # 5️⃣ Recuperar columnas
     cols_a_recuperar = st.sidebar.multiselect(
         "Select columns to recover:",
         options=st.session_state.eliminadas
@@ -218,33 +134,31 @@ def ejecutar_eda(df_original):
         if col in st.session_state.eliminadas:
             st.session_state.eliminadas.remove(col)
 
-    # 6️⃣ Aplicar eliminaciones
     df_revised = df.drop(columns=st.session_state.eliminadas, errors="ignore")
 
-    # Mostrar resumen de columnas eliminadas
     if st.session_state.eliminadas:
         st.sidebar.warning(f"🗑️ Deleted columns: {', '.join(st.session_state.eliminadas)}")
     else:
         st.sidebar.info("No deleted columns.")
 
-    # 7️⃣ Preview del dataset
+    # --- Vista previa
     st.subheader("📊 Data Preview after Cleaning")
     st.markdown("<div class='stCard'>", unsafe_allow_html=True)
     st.dataframe(df_revised.head(5))
     st.markdown("</div>", unsafe_allow_html=True)
     st.info(f"**Final Dataset Shape:** {df_revised.shape[0]} rows × {df_revised.shape[1]} columns")
 
-    # 8️⃣ Información general
     mostrar_info(df_revised)
 
     st.markdown("---")
 
-    # 9️⃣ Ejecutar módulos adicionales
+    # --- EDA adicional
     from app.eda_2 import ejecutar_eda_2
     ejecutar_eda_2(df_revised)
 
     st.markdown("---")
 
+    # --- EDA con variable objetivo
     from app.eda_target import ejecutar_eda_target
     ejecutar_eda_target(df_revised)
 

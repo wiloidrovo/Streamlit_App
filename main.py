@@ -2,9 +2,10 @@ import streamlit as st
 import os
 from app.carga_datos import cargar_archivo, mostrar_info, mostrar_estadisticas, mostrar_preview
 from app.eda import ejecutar_eda
+from app.utils import apply_style
 
 # ==============================================
-# 🌈 CONFIGURACIÓN GLOBAL DE ESTILO
+# CONFIGURACIÓN GLOBAL
 # ==============================================
 st.set_page_config(
     page_title="Telco Churn Analyzer",
@@ -12,93 +13,12 @@ st.set_page_config(
     layout="wide"
 )
 
-# CSS personalizado para un estilo más profesional
-st.markdown("""
-    <style>
-        /* General */
-        .main {
-            background-color: #0e1117;
-            color: #fafafa;
-            font-family: "Inter", sans-serif;
-        }
-        h1, h2, h3, h4 {
-            color: #00bcd4;
-            font-weight: 700 !important;
-        }
-        p, label {
-            color: #e0e0e0;
-        }
-
-        /* Sidebar */
-        section[data-testid="stSidebar"] {
-            background: linear-gradient(180deg, #1a1a2e, #16213e);
-            color: white;
-        }
-        section[data-testid="stSidebar"] h2, section[data-testid="stSidebar"] p {
-            color: #f5f5f5 !important;
-        }
-        div[data-testid="stSidebarNav"] span {
-            color: #fff;
-            font-weight: 600;
-        }
-
-        /* Buttons */
-        div.stButton > button {
-            background: linear-gradient(90deg, #00bcd4, #2196f3);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 0.6em 1.2em;
-            font-weight: 600;
-            transition: all 0.2s ease-in-out;
-        }
-        div.stButton > button:hover {
-            background: linear-gradient(90deg, #26c6da, #42a5f5);
-            transform: scale(1.03);
-        }
-
-        /* Subheaders */
-        div.block-container h2 {
-            border-left: 5px solid #00bcd4;
-            padding-left: 10px;
-            margin-top: 1em;
-        }
-
-        /* Radio buttons horizontales */
-        div[role="radiogroup"] > label > div {
-            background-color: #1e293b;
-            color: #e0e0e0;
-            border-radius: 6px;
-            padding: 0.5em 1em;
-            margin: 3px;
-            transition: 0.2s;
-        }
-        div[role="radiogroup"] > label > div:hover {
-            background-color: #00bcd4;
-            color: white;
-        }
-
-        /* Dataframe */
-        div[data-testid="stDataFrame"] {
-            border-radius: 8px;
-            border: 1px solid #1f2937;
-        }
-
-        /* Success messages */
-        .stSuccess {
-            background-color: #063d33;
-            border-left: 6px solid #00e676;
-            color: #d4f3e3;
-        }
-
-    </style>
-""", unsafe_allow_html=True)
-
 # ==============================================
-# 🧭 APLICACIÓN PRINCIPAL
+# APLICACIÓN PRINCIPAL
 # ==============================================
 def main():
-    # Encabezado principal
+    apply_style()
+
     st.markdown("""
     <div style="text-align:center; padding: 1.5em 0; border-bottom: 1px solid #2a2a40;">
         <h1 style="color:#00bcd4; margin-bottom:0;">📊 Telco Customer Churn Analyzer</h1>
@@ -106,7 +26,7 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
-    # Sidebar con navegación elegante
+    # Sidebar
     with st.sidebar:
         st.image("logo.png", width=140)
         st.markdown("### 🧭 Navigation")
