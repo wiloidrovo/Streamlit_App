@@ -1,7 +1,91 @@
 import streamlit as st
 import pandas as pd
 
-# Función para aplicar imputaciones sobre el dataset base
+# =====================================================
+# 💅 ESTILO PERSONALIZADO (mismo tema que main.py)
+# =====================================================
+st.markdown("""
+    <style>
+        /* Contenedor principal */
+        .main {
+            background-color: #0e1117;
+            color: #fafafa;
+            font-family: "Inter", sans-serif;
+        }
+        h1, h2, h3, h4 {
+            color: #00bcd4;
+            font-weight: 700 !important;
+        }
+        p, label, .stMarkdown {
+            color: #e0e0e0;
+        }
+
+        /* Subheaders con acento */
+        div.block-container h2 {
+            border-left: 5px solid #00bcd4;
+            padding-left: 10px;
+            margin-top: 1.5em;
+        }
+
+        /* Tarjetas elegantes */
+        .stCard {
+            background: #111827;
+            padding: 1.2em 1.5em;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,.3);
+            margin-bottom: 1.5em;
+        }
+
+        /* Sidebar */
+        section[data-testid="stSidebar"] {
+            background: linear-gradient(180deg, #1a1a2e, #16213e);
+        }
+
+        /* Botones */
+        div.stButton > button {
+            background: linear-gradient(90deg, #00bcd4, #2196f3);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0.5em 1.1em;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+        }
+        div.stButton > button:hover {
+            background: linear-gradient(90deg, #26c6da, #42a5f5);
+            transform: scale(1.03);
+        }
+
+        /* Tablas y dataframes */
+        div[data-testid="stDataFrame"] {
+            border-radius: 8px;
+            border: 1px solid #1f2937;
+        }
+
+        /* Mensajes */
+        .stSuccess {
+            background-color: #063d33;
+            border-left: 6px solid #00e676;
+            color: #d4f3e3;
+        }
+        .stInfo {
+            background-color: #0b2239;
+            border-left: 6px solid #42a5f5;
+            color: #cfe8ff;
+        }
+        .stWarning {
+            background-color: #332b00;
+            border-left: 6px solid #ffeb3b;
+            color: #fff8b0;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+
+# =====================================================
+# ⚙️ FUNCIONES DE PROCESAMIENTO
+# =====================================================
+
 def aplicar_imputaciones(df, imputaciones):
     df_copy = df.copy()
     for col, strat, val in imputaciones:
@@ -18,28 +102,28 @@ def aplicar_imputaciones(df, imputaciones):
             df_copy[col] = df_copy[col].fillna(moda)
     return df_copy
 
-# Función para imputar datos nulos
+
 def imputar_nulos(df):
-    st.subheader("Treatment of null values")
+    st.subheader("🧩 Treatment of Null Values")
 
     # Inicializar log de imputaciones
     if "imputaciones" not in st.session_state:
         st.session_state.imputaciones = []
 
-    # Resumen de nulos
     null_summary = df.isnull().sum()
     null_summary = null_summary[null_summary > 0]
 
     if null_summary.empty:
-        st.info("There are no null values in the current dataset.")
+        st.info("✅ There are no null values in the current dataset.")
     else:
+        st.markdown("<div class='stCard'>", unsafe_allow_html=True)
         st.write("Columns with null values:")
         st.dataframe(null_summary.rename("Missing Values"))
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        # Seleccionar columna a imputar
         col_seleccionada = st.selectbox(
-            "Select the column to be imputed:",
-            options = null_summary.index
+            "📌 Select the column to be imputed:",
+            options=null_summary.index
         )
 
         estrategia = None
@@ -48,47 +132,45 @@ def imputar_nulos(df):
         if col_seleccionada:
             if pd.api.types.is_numeric_dtype(df[col_seleccionada]):
                 estrategia = st.radio(
-                    f"Strategy for imputing {col_seleccionada} (numerical):",
+                    f"⚙️ Strategy for imputing `{col_seleccionada}` (numerical):",
                     ["Mean", "Median", "Mode", "Constant Value", "Delete rows"],
                     horizontal=True
                 )
-                if estrategia == "Valor constante":
+                if estrategia == "Constant Value":
                     constante = st.number_input(
-                        f"Ingrese el valor con el que desea imputar {col_seleccionada}:"
+                        f"Enter the constant value for `{col_seleccionada}`:"
                     )
             else:
                 estrategia = st.radio(
-                    f"Strategy for imputing {col_seleccionada} (categorical):",
+                    f"⚙️ Strategy for imputing `{col_seleccionada}` (categorical):",
                     ["Mode", "Constant Value", "Delete rows"],
                     horizontal=True
                 )
                 if estrategia == "Constant Value":
                     constante = st.text_input(
-                        f"Enter the value to be imputed {col_seleccionada}:"
+                        f"Enter the constant value for `{col_seleccionada}`:"
                     )
 
-        # Botón para aplicar imputación
-        if st.button("Apply imputation"):
+        if st.button("💾 Apply Imputation"):
             if estrategia and col_seleccionada:
-                # Si ya existe imputación previa para esta columna, la reemplaza
                 st.session_state.imputaciones = [
                     imp for imp in st.session_state.imputaciones if imp[0] != col_seleccionada
                 ]
                 st.session_state.imputaciones.append((col_seleccionada, estrategia, constante))
-                st.success(f"Imputation saved: {col_seleccionada} -> {estrategia}")
+                st.success(f"✅ Imputation saved: `{col_seleccionada}` → {estrategia}")
 
     # Mostrar historial de imputaciones
     if st.session_state.imputaciones:
-        st.sidebar.info("Imputations History:")
+        st.sidebar.markdown("### 🧮 Imputations History")
         for col, strat, val in st.session_state.imputaciones:
-            detalle = f"{col} -> {strat}"
+            detalle = f"• **{col}** → {strat}"
             if val not in [None, ""]:
                 detalle += f" ({val})"
-            st.sidebar.write(detalle)
+            st.sidebar.markdown(detalle)
 
-# Función que muestra un resumen general
+
 def mostrar_info(df):
-    st.subheader("General Information (Updated Dataset)")
+    st.subheader("📋 General Information (Updated Dataset)")
     info_df = pd.DataFrame({
         'Column': df.columns,
         'Non-Null Count': df.notnull().sum().values,
@@ -97,62 +179,67 @@ def mostrar_info(df):
     })
     st.dataframe(info_df)
 
-# Función principal de EDA
+
+# =====================================================
+# 🎨 ESTRUCTURA PRINCIPAL DE EDA
+# =====================================================
+
 def ejecutar_eda(df_original):
 
-    # 1. Imputación de valores nulos
+    # 1️⃣ Imputación de valores nulos
     df = imputar_nulos(df_original)
 
-    # 2. Aplicar imputaciones al dataset original
+    # 2️⃣ Aplicar imputaciones
     df = aplicar_imputaciones(df_original, st.session_state.get("imputaciones", []))
 
-    # 3. Inicializar lista de columnas eliminadas en session_state
+    # 3️⃣ Inicialización de columnas eliminadas
     if "eliminadas" not in st.session_state:
         st.session_state.eliminadas = []
 
-    st.sidebar.subheader("Column Management")
+    st.sidebar.subheader("🧱 Column Management")
 
-    # 4. Selección de columnas a eliminar
+    # 4️⃣ Eliminar columnas
     cols_a_eliminar = st.sidebar.multiselect(
         "Select columns to delete:",
         options=[col for col in df.columns if col not in st.session_state.eliminadas]
     )
 
-    #if cols_a_eliminar:
     for col in cols_a_eliminar:
         if col not in st.session_state.eliminadas:
             st.session_state.eliminadas.append(col)
 
-    # 2. Opción para recuperar columnas eliminadas
+    # 5️⃣ Recuperar columnas
     cols_a_recuperar = st.sidebar.multiselect(
         "Select columns to recover:",
         options=st.session_state.eliminadas
     )
 
-    #if cols_a_recuperar:
     for col in cols_a_recuperar:
         if col in st.session_state.eliminadas:
             st.session_state.eliminadas.remove(col)
 
-    # Aplicar eliminaciones
+    # 6️⃣ Aplicar eliminaciones
     df_revised = df.drop(columns=st.session_state.eliminadas, errors="ignore")
 
-    # Mostrar siempre qué columnas están eliminadas
+    # Mostrar resumen de columnas eliminadas
     if st.session_state.eliminadas:
-        st.sidebar.warning(f"Deleted columns: {', '.join(st.session_state.eliminadas)}")
+        st.sidebar.warning(f"🗑️ Deleted columns: {', '.join(st.session_state.eliminadas)}")
     else:
-        st.sidebar.info("There are no deleted columns")
+        st.sidebar.info("No deleted columns.")
 
-    # Preview del dataset después de limpieza
-    st.subheader("Data Preview after cleaning")
-    st.write(df_revised.head(5))
-    st.info(f"Dataset final shape: {df_revised.shape[0]} rows x {df_revised.shape[1]} columns")
+    # 7️⃣ Preview del dataset
+    st.subheader("📊 Data Preview after Cleaning")
+    st.markdown("<div class='stCard'>", unsafe_allow_html=True)
+    st.dataframe(df_revised.head(5))
+    st.markdown("</div>", unsafe_allow_html=True)
+    st.info(f"**Final Dataset Shape:** {df_revised.shape[0]} rows × {df_revised.shape[1]} columns")
 
-    # Resumen general actualizado
+    # 8️⃣ Información general
     mostrar_info(df_revised)
 
     st.markdown("---")
 
+    # 9️⃣ Ejecutar módulos adicionales
     from app.eda_2 import ejecutar_eda_2
     ejecutar_eda_2(df_revised)
 
@@ -161,5 +248,4 @@ def ejecutar_eda(df_original):
     from app.eda_target import ejecutar_eda_target
     ejecutar_eda_target(df_revised)
 
-    # Retornamos el dataframe modificado
     return df_revised
