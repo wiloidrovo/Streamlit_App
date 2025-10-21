@@ -28,7 +28,7 @@ def main():
 
     # Sidebar
     with st.sidebar:
-        st.image("logo.png", width=140)
+        st.image("logo4.png", width=800)
         st.markdown("### 🧭 Navigation")
         opciones = ["Data Loading", "EDA", "ML Model", "Dashboard", "Business Impact"]
         seleccion = st.radio("Select a tab:", opciones, index=0)
