@@ -33,7 +33,7 @@ def business_impact_page(df_clean: pd.DataFrame):
         st.error("No trained models found in `models/`.")
         return
 
-    col1, col2 = st.columns([2,1])
+    col1, col2 = st.columns([2, 1])
     with col1:
         model_names = sorted(set(x.split("_")[0].upper() for x in bundles))
         mdl = st.selectbox("Prediction model:", model_names, index=0)
@@ -50,17 +50,37 @@ def business_impact_page(df_clean: pd.DataFrame):
     if target not in df_clean.columns:
         st.info("No ground-truth `Churn` column found; only predictions will be shown.")
 
-    # KPIs de negocio: supuestos
+    # ===============================
+    # Business assumptions (inputs)
+    # ===============================
     st.markdown("### 💵 Business assumptions")
     c1, c2, c3 = st.columns(3)
     with c1:
-        avg_revenue = st.number_input("Average Monthly Charges (ARPU)", min_value=0.0, value=float(df_clean.get("MonthlyCharges", pd.Series([70])).median()))
+        avg_revenue = st.number_input(
+            "Average Monthly Charges (ARPU)",
+            min_value=0.0,
+            value=float(df_clean.get("MonthlyCharges", pd.Series([70])).median())
+        )
     with c2:
         retention_cost = st.number_input("Retention Campaign Cost per user", min_value=0.0, value=10.0)
     with c3:
-        retention_effect = st.slider("Retention effectiveness (%)", 0, 100, 30, help="% of at-risk users that you expect to retain with the campaign.")
+        retention_effect = st.slider(
+            "Retention effectiveness (%)", 0, 100, 30,
+            help="% of at-risk users that you expect to retain with the campaign."
+        )
 
-    # Predicción de churn prob para todos los registros
+    # Elegir base de ingresos para los KPIs: datos reales vs simulación (ARPU)
+    revenue_basis = st.radio(
+        "Revenue basis",
+        options=["Use dataset column 'MonthlyCharges'", "Use custom ARPU"],
+        index=0 if "MonthlyCharges" in df_clean.columns else 1,
+        help="Choose whether KPIs use actual MonthlyCharges from the dataset or the ARPU you set above.",
+        horizontal=True,
+    )
+
+    # ===============================
+    # Scoring (probabilidad churn)
+    # ===============================
     with st.spinner("Scoring current dataset…"):
         X = df_clean.drop(columns=[target]) if target in df_clean.columns else df_clean.copy()
         if hasattr(pipe, "predict_proba"):
@@ -71,25 +91,32 @@ def business_impact_page(df_clean: pd.DataFrame):
         df_scores = df_clean.copy()
         df_scores["churn_proba"] = proba
 
-    # % clientes en riesgo (umbral configurable)
+    # ===============================
+    # Segmentación por riesgo
+    # ===============================
     st.markdown("### ⚠️ Risk segmentation")
     thr = st.slider("Churn probability threshold (%)", 0, 100, 70)
-    risky = df_scores["churn_proba"] >= (thr/100)
+    risky = df_scores["churn_proba"] >= (thr / 100)
 
     risk_rate = risky.mean() * 100
-    at_risk = risky.sum()
+    at_risk = int(risky.sum())
 
-    # Revenue at risk (aprox)
-    revenue_col = "MonthlyCharges" if "MonthlyCharges" in df_scores.columns else None
-    if revenue_col:
-        revenue_at_risk = df_scores.loc[risky, revenue_col].sum()
-        avg_arpu = df_scores[revenue_col].mean()
+    # ===============================
+    # Ingresos en riesgo & ARPU usado
+    # ===============================
+    revenue_col_available = "MonthlyCharges" in df_scores.columns
+
+    if revenue_basis.startswith("Use dataset") and revenue_col_available:
+        # Modo realista: usa los cargos mensuales observados en el dataset
+        avg_arpu = float(df_scores["MonthlyCharges"].mean())
+        revenue_at_risk = float(df_scores.loc[risky, "MonthlyCharges"].sum())
     else:
-        revenue_at_risk = at_risk * avg_revenue
-        avg_arpu = avg_revenue
+        # Modo simulación: usa el ARPU definido arriba
+        avg_arpu = float(avg_revenue)
+        revenue_at_risk = float(at_risk * avg_arpu)
 
     # Potenciales ahorros si se retiene X% de los de riesgo
-    retained = int(at_risk * (retention_effect/100))
+    retained = int(at_risk * (retention_effect / 100))
     potential_savings = retained * avg_arpu - retained * retention_cost
 
     m1, m2, m3, m4 = st.columns(4)
@@ -100,12 +127,22 @@ def business_impact_page(df_clean: pd.DataFrame):
 
     st.markdown("---")
 
+    # ===============================
     # Distribución de probabilidades
+    # ===============================
     st.subheader("📉 Churn probability distribution")
-    fig_hist = px.histogram(df_scores, x="churn_proba", nbins=40, color=risky.map({True:"At risk", False:"Safe"}),
-                            color_discrete_sequence=px.colors.qualitative.Set2)
+    fig_hist = px.histogram(
+        df_scores,
+        x="churn_proba",
+        nbins=40,
+        color=risky.map({True: "At risk", False: "Safe"}),
+        color_discrete_sequence=px.colors.qualitative.Set2
+    )
     st.plotly_chart(fig_hist, use_container_width=True)
 
+    # ===============================
+    # Feature importance (drivers)
+    # ===============================
     st.subheader("⭐ Key drivers (feature importance)")
     importances = bundle.get("feature_importances", [])
     selected = bundle.get("selected_features", None)
@@ -115,28 +152,43 @@ def business_impact_page(df_clean: pd.DataFrame):
         else:
             try:
                 pre = bundle["pipeline"].named_steps["preprocessing"]
-                feat_names = list(pre._columns) if hasattr(pre, "_columns") else [f"F{i}" for i,_ in enumerate(importances)]
+                feat_names = list(pre._columns) if hasattr(pre, "_columns") else [f"F{i}" for i, _ in enumerate(importances)]
             except Exception:
-                feat_names = [f"F{i}" for i,_ in enumerate(importances)]
+                feat_names = [f"F{i}" for i, _ in enumerate(importances)]
 
-        imp_df = pd.DataFrame({"feature": feat_names, "importance": importances}).sort_values("importance", ascending=False).head(20)
+        imp_df = (
+            pd.DataFrame({"feature": feat_names, "importance": importances})
+            .sort_values("importance", ascending=False)
+            .head(20)
+        )
         st.plotly_chart(px.bar(imp_df, x="importance", y="feature", orientation="h"), use_container_width=True)
     else:
         st.info("This model doesn't expose feature importances.")
 
     st.markdown("---")
 
+    # ===============================
+    # Recomendaciones por cliente
+    # ===============================
     st.subheader("🤖 Automatic recommendation (per-customer)")
     sample_n = st.slider("Show top-N at-risk customers", 5, 50, 10)
+
     top_at_risk = df_scores.sort_values("churn_proba", ascending=False).head(sample_n).copy()
     top_at_risk["recommendation"] = np.where(
         top_at_risk["churn_proba"] >= 0.7,
         "High risk → Offer discount or add-on service",
-        np.where(top_at_risk["churn_proba"] >= 0.4,
-                 "Medium risk → Loyalty offers / follow-up",
-                 "Low risk → Normal monitoring")
+        np.where(
+            top_at_risk["churn_proba"] >= 0.4,
+            "Medium risk → Loyalty offers / follow-up",
+            "Low risk → Normal monitoring",
+        ),
     )
+
     cols_to_show = ["churn_proba"]
-    if revenue_col:
-        cols_to_show = [revenue_col] + cols_to_show
-    st.dataframe(top_at_risk[cols_to_show + ["recommendation"]].style.format({"churn_proba": "{:.2%}"}))
+    if revenue_col_available:
+        cols_to_show = ["MonthlyCharges"] + cols_to_show
+
+    st.dataframe(
+        top_at_risk[cols_to_show + ["recommendation"]]
+        .style.format({"churn_proba": "{:.2%}"})
+    )

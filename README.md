@@ -114,7 +114,7 @@ Streamlit_App/
 │   ├── ml_page.py                # Formulario de inferencia y predicción
 │   ├── dashboard.py              # Dashboard con métricas, matrices y feature importances
 │   ├── business_impact.py        # Análisis de impacto financiero del churn
-│   └── utils.py                  # Funciones auxiliares
+│   └── utils.py                  # CSS para estilos
 │
 ├── models/                       # Modelos y métricas exportadas
 │   ├── *_all.pkl                 # Versiones con todas las variables

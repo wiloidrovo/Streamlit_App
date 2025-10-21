@@ -2,20 +2,22 @@ import streamlit as st
 import os
 import pandas as pd
 import joblib
+from app.utils import apply_style
 
-
-# ==============================================================
-# 🧠 CUSTOMER CHURN PREDICTION PAGE
-# ==============================================================
+apply_style()
 
 def prediction_page(df_clean):
     st.markdown(
         """
-        <h1 style='text-align:center; color:#4B9CD3;'>📊 Customer Churn Prediction Dashboard</h1>
-        <p style='text-align:center; font-size:18px;'>
-            Use this interactive form to simulate a customer's profile and predict whether they are likely to churn.  
-            Select your model and feature configuration below.
-        </p>
+        <div style='text-align:center; padding: 1.5em 0;'>
+            <h1 style='color:#00bcd4; font-weight:700; letter-spacing:0.5px;'>
+                🤖 Customer Churn Prediction Dashboard
+            </h1>
+            <p style='color:#b0bec5; font-size:17px; margin-top:8px;'>
+                Simulate a customer’s profile and predict churn probability in real time.<br>
+                Select your preferred <b>model</b> and <b>feature configuration</b> below.
+            </p>
+        </div>
         """,
         unsafe_allow_html=True
     )
@@ -35,10 +37,14 @@ def prediction_page(df_clean):
 
     # Sidebar with model options
     with st.sidebar:
-        st.header("⚙️ Model Configuration")
+        st.markdown("### ⚙️ Model Configuration")
+        st.markdown("<hr>", unsafe_allow_html=True)
+
         model_names = sorted(set(m.split("_")[0] for m in available_models))
-        model_choice = st.selectbox("Select a model:", model_names)
-        version_choice = st.radio("Select version:", ("all", "top"), horizontal=True)
+        model_choice = st.selectbox("Select Model:", model_names)
+        version_choice = st.radio("Select Version:", ("all", "top"), horizontal=True)
+
+        st.markdown("<hr>", unsafe_allow_html=True)
 
     model_file = f"{model_choice}_{version_choice}.pkl"
     model_path = os.path.join(model_dir, model_file)
@@ -62,13 +68,28 @@ def prediction_page(df_clean):
     st.markdown("---")
 
     # ----------------------------------------------------------
-    # FORM SECTION
+    # FORM SECTION (Glass Card)
     # ----------------------------------------------------------
-    st.markdown("<h3 style='color:#1E88E5;'>🧾 Enter Customer Details</h3>", unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div style='
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(0, 188, 212, 0.25);
+            border-radius: 12px;
+            padding: 2em;
+            margin-top: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(6px);
+        '>
+        <h3 style='color:#00bcd4; margin-bottom:10px;'>🧾 Enter Customer Details</h3>
+        <p style='color:#9aa7b3; margin-top:-5px;'>Fill in the customer’s profile information to generate a prediction.</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     user_input = {}
 
-    # Responsive 2-column form
     with st.form("prediction_form"):
         cols = st.columns(2)
         i = 0
@@ -77,7 +98,7 @@ def prediction_page(df_clean):
                 continue
 
             serie = df_clean[col_name]
-            with cols[i % 2]:  # alternate between 2 columns
+            with cols[i % 2]:
                 if pd.api.types.is_numeric_dtype(serie):
                     if pd.api.types.is_integer_dtype(serie):
                         user_input[col_name] = st.number_input(
@@ -98,7 +119,7 @@ def prediction_page(df_clean):
             i += 1
 
         st.markdown("<br>", unsafe_allow_html=True)
-        submitted = st.form_submit_button("🔮 **Predict**", use_container_width=True)
+        submitted = st.form_submit_button("🔮 **Predict Now**", use_container_width=True)
 
     # ----------------------------------------------------------
     # PREDICTION RESULT
@@ -115,34 +136,76 @@ def prediction_page(df_clean):
 
             st.markdown("---")
             st.markdown(
-                "<h3 style='color:#43A047;'>🎯 Prediction Result</h3>",
+                """
+                <h3 style='color:#00e676; text-align:center;'>
+                    🎯 Prediction Result
+                </h3>
+                """,
                 unsafe_allow_html=True
             )
 
-            # Layout for prediction + probability side by side
             col1, col2 = st.columns([2, 1])
+
             with col1:
                 if str(pred) == "Yes":
-                    st.error("**Customer is likely to CHURN** 💔")
+                    st.markdown(
+                        """
+                        <div style='
+                            background: rgba(255, 0, 0, 0.07);
+                            border-left: 6px solid #ef5350;
+                            border-radius: 8px;
+                            padding: 1.2em;
+                            margin-top: 10px;
+                        '>
+                            <h4 style='color:#ef5350; margin:0;'>💔 Customer is likely to CHURN</h4>
+                            <p style='color:#ef9a9a; margin:5px 0 0 0;'>Immediate attention required.</p>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
                 else:
-                    st.success("**Customer will NOT churn** 💚")
+                    st.markdown(
+                        """
+                        <div style='
+                            background: rgba(0, 255, 127, 0.07);
+                            border-left: 6px solid #00e676;
+                            border-radius: 8px;
+                            padding: 1.2em;
+                            margin-top: 10px;
+                        '>
+                            <h4 style='color:#00e676; margin:0;'>💚 Customer will NOT churn</h4>
+                            <p style='color:#b9f6ca; margin:5px 0 0 0;'>Customer likely to remain loyal.</p>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
 
             with col2:
                 if proba is not None:
-                    st.metric("Churn Probability", f"{proba * 100:.2f}%")
+                    st.metric("Churn Probability", f"{proba * 100:.2f}%", delta=None)
 
-            # Conditional recommendations
+            # Recommendations
             if proba is not None:
                 if proba > 0.7:
-                    st.warning("⚠️ **High risk of churn detected.**\n\n💡 Suggested action: Offer a discount or loyalty incentive.")
+                    st.warning(
+                        "⚠️ **High risk of churn detected.**\n\n💡 Suggested action: Offer a discount or loyalty incentive."
+                    )
                 elif proba > 0.4:
-                    st.info("🟡 **Medium churn risk.**\n\nConsider sending satisfaction surveys or retention offers.")
+                    st.info(
+                        "🟡 **Medium churn risk.**\n\nConsider sending satisfaction surveys or retention offers."
+                    )
                 else:
-                    st.success("🟢 **Low churn risk.** Customer likely to remain loyal.")
+                    st.success(
+                        "🟢 **Low churn risk.** Customer likely to remain loyal."
+                    )
 
-            st.markdown("<br>", unsafe_allow_html=True)
             st.markdown(
-                f"<p style='text-align:center; color:gray;'>Model used: <b>{model_choice.upper()}</b> | Version: <b>{version_choice.upper()}</b></p>",
+                f"""
+                <div style='text-align:center; margin-top:20px; color:#90a4ae;'>
+                    <small>Model used: <b style='color:#00bcd4;'>{model_choice.upper()}</b> |
+                    Version: <b style='color:#00bcd4;'>{version_choice.upper()}</b></small>
+                </div>
+                """,
                 unsafe_allow_html=True
             )
 

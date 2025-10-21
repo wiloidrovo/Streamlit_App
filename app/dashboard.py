@@ -64,7 +64,7 @@ def dashboard_page(df_clean=None):
         return
 
     # Gráfico comparativo (All vs Top)
-    st.subheader("📊 Metrics comparison (Validation)")
+    st.subheader("📊 Metrics comparison")
     bar = px.bar(
         df_show, x="Model", y=metric_to_show, color="Version",
         barmode="group", text=metric_to_show, range_y=[0,1],
@@ -94,7 +94,7 @@ def dashboard_page(df_clean=None):
     # Confusion matrix (val)
     cm = bundle.get("confusion_val", None)
     if cm is not None:
-        st.plotly_chart(fig_confusion(cm, labels=("No","Yes"), title=f"{mdl} - {version} (Validation)"), use_container_width=True)
+        st.plotly_chart(fig_confusion(cm, labels=("No","Yes"), title=f"{mdl} - {version}"), use_container_width=True)
     else:
         st.info("Confusion matrix not stored in bundle.")
 

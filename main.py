@@ -98,7 +98,6 @@ def main():
     # ==============================================
     elif seleccion == "Dashboard":
         from app.dashboard import dashboard_page
-        st.subheader("📈 Model Dashboard")
         dashboard_page(st.session_state.get("df", None))
 
     # ==============================================
@@ -106,7 +105,6 @@ def main():
     # ==============================================
     elif seleccion == "Business Impact":
         from app.business_impact import business_impact_page
-        st.subheader("💼 Business Impact Analysis")
         if "df" in st.session_state:
             business_impact_page(st.session_state.df)
         else:
